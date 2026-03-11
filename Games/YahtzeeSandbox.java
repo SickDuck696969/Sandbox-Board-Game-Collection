@@ -24,6 +24,8 @@ public class YahtzeeSandbox extends JFrame {
     @SuppressWarnings("FieldMayBeFinal")
     private JButton addPlayerBtn;
     @SuppressWarnings("FieldMayBeFinal")
+    private JButton resetBtn; // Thêm nút Reset
+    @SuppressWarnings("FieldMayBeFinal")
     private JButton randomColorBtn;
     @SuppressWarnings("FieldMayBeFinal")
     private JPanel playersContainer;
@@ -62,7 +64,7 @@ public class YahtzeeSandbox extends JFrame {
             }
         });
 
-        // Khởi tạo xúc xắc với mặt ngẫu nhiên ban đầu (không tính là 1 lần roll)
+        // Khởi tạo xúc xắc
         for (int i = 0; i < 5; i++) {
             Dice die = new Dice();
             die.value = random.nextInt(6) + 1;
@@ -93,11 +95,21 @@ public class YahtzeeSandbox extends JFrame {
         JPanel addPlayerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         addPlayerPanel.add(new JLabel("Player Name: "));
         JTextField nameInput = new JTextField(15);
+        
+        // Bắt sự kiện nhấn Enter để thêm người chơi nhanh hơn
+        nameInput.addActionListener(e -> addPlayerBtn.doClick());
         addPlayerPanel.add(nameInput);
         
         addPlayerBtn = new JButton("Add Player");
         addPlayerBtn.setFocusPainted(false);
         addPlayerPanel.add(addPlayerBtn);
+        
+        // Khởi tạo và thêm nút Reset
+        resetBtn = new JButton("Reset Board");
+        resetBtn.setFocusPainted(false); // Cho màu hơi đỏ để nổi bật
+        resetBtn.setForeground(Color.BLACK);
+        addPlayerPanel.add(resetBtn);
+        
         scoreSheetPanel.add(addPlayerPanel, BorderLayout.NORTH);
 
         JPanel mainScoreArea = new JPanel(new BorderLayout());
@@ -122,11 +134,45 @@ public class YahtzeeSandbox extends JFrame {
         scoreSheetPanel.add(scrollPane, BorderLayout.CENTER);
         add(scoreSheetPanel, BorderLayout.CENTER);
 
+        // Chức năng thêm người chơi
         addPlayerBtn.addActionListener(e -> {
             String name = nameInput.getText().trim();
             if (!name.isEmpty()) {
                 addPlayerColumn(name);
                 nameInput.setText("");
+            }
+        });
+        
+        // Chức năng Reset bảng điểm
+        // Chức năng Reset bảng điểm
+        resetBtn.addActionListener(e -> {
+            if (playersContainer.getComponentCount() > 0) {
+                int confirm = JOptionPane.showConfirmDialog(this, 
+                        "Are you sure you want to clear all scores?", 
+                        "Reset Scores", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                if (confirm == JOptionPane.YES_OPTION) {
+                    
+                    // Duyệt qua từng cột người chơi trong bảng
+                    for (Component colComp : playersContainer.getComponents()) {
+                        if (colComp instanceof JPanel playerCol) {
+                            
+                            // Duyệt qua từng ô trong cột (bỏ qua Label tên ở vị trí 0)
+                            for (int i = 1; i < playerCol.getComponentCount(); i++) {
+                                Component cellComp = playerCol.getComponent(i);
+                                if (cellComp instanceof JTextField scoreField) {
+                                    scoreField.setText(""); // Xóa số điểm
+                                    scoreField.setForeground(Color.BLACK); // Đưa màu chữ về mặc định
+                                    
+                                    // Dựa vào màu nền trắng để phân biệt ô nhập điểm thường và ô Total
+                                    if (scoreField.getBackground().equals(Color.WHITE)) {
+                                        scoreField.putClientProperty("isConfirmed", false); // Hủy trạng thái đã chốt điểm
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    resetTurn(); // Đưa xúc xắc và số lượt đổ về 0
+                }
             }
         });
     }
@@ -138,8 +184,6 @@ public class YahtzeeSandbox extends JFrame {
         Color newTrayColor = Color.getHSBColor(random.nextFloat(), 0.6f, 0.6f);
         Color newDiceBgColor = Color.getHSBColor(random.nextFloat(), 0.2f, 0.9f);
         Color newBtnColor = Color.getHSBColor(random.nextFloat(), 0.3f, 0.9f);
-        
-        // Màu của các chấm (nút) trên xúc xắc - ép độ sáng thấp để dễ nhìn
         Color newPipColor = Color.getHSBColor(random.nextFloat(), 0.8f, 0.3f); 
 
         diceTrayPanel.setBackground(newTrayColor);
@@ -181,7 +225,6 @@ public class YahtzeeSandbox extends JFrame {
     }
 
     private void resetTurn() {
-        // Hoàn tác lỗi auto-roll: Đưa số đếm về 0 và KHÔNG tự động lắc
         rollCount = 0; 
         rollCountLabel.setText("Roll Count: 0");
         for (Dice die : diceList) {
@@ -194,7 +237,26 @@ public class YahtzeeSandbox extends JFrame {
         JPanel playerCol = new JPanel(new GridLayout(CATEGORIES.length + 1, 1, 2, 2));
         playerCol.setBorder(BorderFactory.createMatteBorder(0, 1, 0, 1, Color.LIGHT_GRAY));
         
-        playerCol.add(createHeaderLabel(playerName));
+        // Tạo label tên người chơi và thêm sự kiện click chuột phải để xóa
+        JLabel nameLabel = createHeaderLabel(playerName);
+        nameLabel.setToolTipText("Right-click to remove this player");
+        nameLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        nameLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    int confirm = JOptionPane.showConfirmDialog(YahtzeeSandbox.this, 
+                            "Remove player: " + playerName + "?", 
+                            "Remove Player", JOptionPane.YES_NO_OPTION);
+                    if (confirm == JOptionPane.YES_OPTION) {
+                        playersContainer.remove(playerCol);
+                        playersContainer.revalidate();
+                        playersContainer.repaint();
+                    }
+                }
+            }
+        });
+        playerCol.add(nameLabel);
         
         List<JTextField> textFields = new ArrayList<>();
 
@@ -333,24 +395,12 @@ public class YahtzeeSandbox extends JFrame {
             }
 
             switch (category) {
-                case "Aces (1s)" -> {
-                    return counts[1] * 1;
-                }
-                case "Twos (2s)" -> {
-                    return counts[2] * 2;
-                }
-                case "Threes (3s)" -> {
-                    return counts[3] * 3;
-                }
-                case "Fours (4s)" -> {
-                    return counts[4] * 4;
-                }
-                case "Fives (5s)" -> {
-                    return counts[5] * 5;
-                }
-                case "Sixes (6s)" -> {
-                    return counts[6] * 6;
-                }
+                case "Aces (1s)" -> { return counts[1] * 1; }
+                case "Twos (2s)" -> { return counts[2] * 2; }
+                case "Threes (3s)" -> { return counts[3] * 3; }
+                case "Fours (4s)" -> { return counts[4] * 4; }
+                case "Fives (5s)" -> { return counts[5] * 5; }
+                case "Sixes (6s)" -> { return counts[6] * 6; }
                 case "3 of a kind" -> {
                     for (int count : counts) if (count >= 3) return sum;
                     return 0;
@@ -380,12 +430,8 @@ public class YahtzeeSandbox extends JFrame {
                     for (int count : counts) if (count == 5) return 50;
                     return 0;
                 }
-                case "Chance" -> {
-                    return sum;
-                }
-                default -> {
-                    return 0;
-                }
+                case "Chance" -> { return sum; }
+                default -> { return 0; }
             }
         }
 
@@ -410,7 +456,7 @@ public class YahtzeeSandbox extends JFrame {
         int value = 1;
         boolean isHeld = false;
         Color diceBgColor = Color.WHITE; 
-        Color pipColor = Color.BLACK; // Thêm biến màu cho các chấm nút
+        Color pipColor = Color.BLACK; 
         private final int SIZE = 80;
 
         public Dice() {
@@ -454,7 +500,6 @@ public class YahtzeeSandbox extends JFrame {
             }
             g2d.drawRoundRect(2, 2, SIZE - 4, SIZE - 4, 15, 15);
 
-            // Dùng màu pipColor thay vì mặc định màu Đen
             g2d.setColor(pipColor);
             int pipSize = 14;
             int center = (SIZE - pipSize) / 2;
