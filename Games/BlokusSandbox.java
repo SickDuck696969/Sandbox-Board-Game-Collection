@@ -34,7 +34,7 @@ public class BlokusSandbox extends JFrame {
     };
 
     public BlokusSandbox() {
-        setTitle("Blokus Sandbox");
+        setTitle("Blokus");
         setSize(1500, 700); // Chiều cao tối ưu
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());

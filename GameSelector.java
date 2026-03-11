@@ -60,7 +60,7 @@ public class GameSelector extends JFrame {
         JButton btn = new JButton(text);
         btn.setFont(new Font("Segoe UI", Font.BOLD, 20)); 
         btn.setBackground(bgColor);
-        btn.setForeground(Color.WHITE); 
+        btn.setForeground(Color.BLACK); 
         btn.setFocusPainted(false);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         
@@ -104,7 +104,7 @@ public class GameSelector extends JFrame {
         SwingUtilities.invokeLater(() -> {
             try { 
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); 
-            } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | UnsupportedLookAndFeelException ignored) {}
+            } catch (Exception ignored) {}
             
             GameSelector hub = new GameSelector();
             hub.setLocationRelativeTo(null);
