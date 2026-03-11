@@ -103,10 +103,7 @@ public class GameSelector extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            try { 
-                // Sử dụng giao diện chuẩn của hệ điều hành
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); 
-            } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | UnsupportedLookAndFeelException ignored) {}
+            // Đã xóa dòng UIManager ép giao diện Windows
             
             GameSelector hub = new GameSelector();
             hub.setLocationRelativeTo(null);

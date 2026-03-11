@@ -27,7 +27,7 @@ public class HiveSandbox extends JFrame {
     private final Map<String, Image> bugImages = new HashMap<>();
 
     public HiveSandbox() {
-        setTitle("Hive Sandbox - Expanded Board");
+        setTitle("Hive Sandbox");
         setSize(1200, 850);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
