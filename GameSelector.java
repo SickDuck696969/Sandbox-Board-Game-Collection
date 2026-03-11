@@ -104,7 +104,7 @@ public class GameSelector extends JFrame {
         SwingUtilities.invokeLater(() -> {
             try { 
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); 
-            } catch (Exception ignored) {}
+            } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | UnsupportedLookAndFeelException ignored) {}
             
             GameSelector hub = new GameSelector();
             hub.setLocationRelativeTo(null);
