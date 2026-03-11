@@ -183,12 +183,11 @@ public class YahtzeeSandbox extends JFrame {
     private void randomizeColors() {
         Color newTrayColor = Color.getHSBColor(random.nextFloat(), 0.6f, 0.6f);
         Color newDiceBgColor = Color.getHSBColor(random.nextFloat(), 0.2f, 0.9f);
-        Color newBtnColor = Color.getHSBColor(random.nextFloat(), 0.3f, 0.9f);
         Color newPipColor = Color.getHSBColor(random.nextFloat(), 0.8f, 0.3f); 
 
         diceTrayPanel.setBackground(newTrayColor);
-        addPlayerBtn.setBackground(newBtnColor);
-        randomColorBtn.setBackground(newBtnColor);
+        addPlayerBtn.setBackground(Color.WHITE);
+        randomColorBtn.setBackground(Color.WHITE);
 
         for (Dice die : diceList) {
             die.diceBgColor = newDiceBgColor;
