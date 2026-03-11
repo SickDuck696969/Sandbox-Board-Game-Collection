@@ -1,3 +1,5 @@
+package Games;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
@@ -8,16 +10,22 @@ import javax.swing.border.EmptyBorder;
 
 public class YahtzeeSandbox extends JFrame {
 
+    @SuppressWarnings("FieldMayBeFinal")
     private List<Dice> diceList = new ArrayList<>();
+    @SuppressWarnings("FieldMayBeFinal")
     private Random random = new Random();
     
     private int rollCount = 0;
+    @SuppressWarnings("FieldMayBeFinal")
     private JLabel rollCountLabel;
     private boolean isRolling = false; 
     
-    private JPanel diceTrayPanel;
+    private final JPanel diceTrayPanel;
+    @SuppressWarnings("FieldMayBeFinal")
     private JButton addPlayerBtn;
+    @SuppressWarnings("FieldMayBeFinal")
     private JButton randomColorBtn;
+    @SuppressWarnings("FieldMayBeFinal")
     private JPanel playersContainer;
     
     private final String[] CATEGORIES = {
@@ -190,8 +198,7 @@ public class YahtzeeSandbox extends JFrame {
         
         List<JTextField> textFields = new ArrayList<>();
 
-        for (int i = 0; i < CATEGORIES.length; i++) {
-            String cat = CATEGORIES[i];
+        for (String cat : CATEGORIES) {
             JTextField scoreField = new JTextField(5);
             scoreField.setHorizontalAlignment(JTextField.CENTER);
             scoreField.setFont(new Font("Arial", Font.BOLD, 14));
@@ -203,7 +210,7 @@ public class YahtzeeSandbox extends JFrame {
                 scoreField.setBackground(new Color(220, 220, 220));
                 scoreField.putClientProperty("isConfirmed", true);
             } else {
-                scoreField.setEditable(false); 
+                scoreField.setEditable(false);
                 scoreField.setBackground(Color.WHITE); 
                 scoreField.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
                 scoreField.putClientProperty("isConfirmed", false);
@@ -326,19 +333,33 @@ public class YahtzeeSandbox extends JFrame {
             }
 
             switch (category) {
-                case "Aces (1s)": return counts[1] * 1;
-                case "Twos (2s)": return counts[2] * 2;
-                case "Threes (3s)": return counts[3] * 3;
-                case "Fours (4s)": return counts[4] * 4;
-                case "Fives (5s)": return counts[5] * 5;
-                case "Sixes (6s)": return counts[6] * 6;
-                case "3 of a kind":
+                case "Aces (1s)" -> {
+                    return counts[1] * 1;
+                }
+                case "Twos (2s)" -> {
+                    return counts[2] * 2;
+                }
+                case "Threes (3s)" -> {
+                    return counts[3] * 3;
+                }
+                case "Fours (4s)" -> {
+                    return counts[4] * 4;
+                }
+                case "Fives (5s)" -> {
+                    return counts[5] * 5;
+                }
+                case "Sixes (6s)" -> {
+                    return counts[6] * 6;
+                }
+                case "3 of a kind" -> {
                     for (int count : counts) if (count >= 3) return sum;
                     return 0;
-                case "4 of a kind":
+                }
+                case "4 of a kind" -> {
                     for (int count : counts) if (count >= 4) return sum;
                     return 0;
-                case "Full House":
+                }
+                case "Full House" -> {
                     boolean hasThree = false, hasTwo = false;
                     for (int count : counts) {
                         if (count == 3) hasThree = true;
@@ -346,19 +367,25 @@ public class YahtzeeSandbox extends JFrame {
                         if (count == 5) return 25; 
                     }
                     return (hasThree && hasTwo) ? 25 : 0;
-                case "Sm. Straight":
+                }
+                case "Sm. Straight" -> {
                     if (hasStraight(counts, 4)) return 30;
                     return 0;
-                case "Lg. Straight":
+                }
+                case "Lg. Straight" -> {
                     if (hasStraight(counts, 5)) return 40;
                     return 0;
-                case "YAHTZEE":
+                }
+                case "YAHTZEE" -> {
                     for (int count : counts) if (count == 5) return 50;
                     return 0;
-                case "Chance":
+                }
+                case "Chance" -> {
                     return sum;
-                default:
+                }
+                default -> {
                     return 0;
+                }
             }
         }
 
@@ -437,16 +464,27 @@ public class YahtzeeSandbox extends JFrame {
             int bottom = SIZE - 15 - pipSize;
 
             switch (value) {
-                case 1: g2d.fillOval(center, center, pipSize, pipSize); break;
-                case 2: g2d.fillOval(left, top, pipSize, pipSize); g2d.fillOval(right, bottom, pipSize, pipSize); break;
-                case 3: g2d.fillOval(left, top, pipSize, pipSize); g2d.fillOval(center, center, pipSize, pipSize); g2d.fillOval(right, bottom, pipSize, pipSize); break;
-                case 4: g2d.fillOval(left, top, pipSize, pipSize); g2d.fillOval(right, top, pipSize, pipSize); g2d.fillOval(left, bottom, pipSize, pipSize); g2d.fillOval(right, bottom, pipSize, pipSize); break;
-                case 5: g2d.fillOval(left, top, pipSize, pipSize); g2d.fillOval(right, top, pipSize, pipSize); g2d.fillOval(center, center, pipSize, pipSize); g2d.fillOval(left, bottom, pipSize, pipSize); g2d.fillOval(right, bottom, pipSize, pipSize); break;
-                case 6: g2d.fillOval(left, top, pipSize, pipSize); g2d.fillOval(right, top, pipSize, pipSize); g2d.fillOval(left, center, pipSize, pipSize); g2d.fillOval(right, center, pipSize, pipSize); g2d.fillOval(left, bottom, pipSize, pipSize); g2d.fillOval(right, bottom, pipSize, pipSize); break;
+                case 1 -> g2d.fillOval(center, center, pipSize, pipSize);
+                case 2 -> {
+                    g2d.fillOval(left, top, pipSize, pipSize); g2d.fillOval(right, bottom, pipSize, pipSize);
+                }
+                case 3 -> {
+                    g2d.fillOval(left, top, pipSize, pipSize); g2d.fillOval(center, center, pipSize, pipSize); g2d.fillOval(right, bottom, pipSize, pipSize);
+                }
+                case 4 -> {
+                    g2d.fillOval(left, top, pipSize, pipSize); g2d.fillOval(right, top, pipSize, pipSize); g2d.fillOval(left, bottom, pipSize, pipSize); g2d.fillOval(right, bottom, pipSize, pipSize);
+                }
+                case 5 -> {
+                    g2d.fillOval(left, top, pipSize, pipSize); g2d.fillOval(right, top, pipSize, pipSize); g2d.fillOval(center, center, pipSize, pipSize); g2d.fillOval(left, bottom, pipSize, pipSize); g2d.fillOval(right, bottom, pipSize, pipSize);
+                }
+                case 6 -> {
+                    g2d.fillOval(left, top, pipSize, pipSize); g2d.fillOval(right, top, pipSize, pipSize); g2d.fillOval(left, center, pipSize, pipSize); g2d.fillOval(right, center, pipSize, pipSize); g2d.fillOval(left, bottom, pipSize, pipSize); g2d.fillOval(right, bottom, pipSize, pipSize);
+                }
             }
         }
     }
 
+    @SuppressWarnings("UseSpecificCatch")
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (Exception ignored) {}
