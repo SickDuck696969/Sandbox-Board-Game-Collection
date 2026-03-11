@@ -2,7 +2,6 @@ package Games;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -95,21 +94,29 @@ public class HiveSandbox extends JFrame {
 
     // Tải hình ảnh từ thư mục "images"
     private void loadImages() {
-        String[] uniqueBugs = {"QUEEN", "SPIDER", "BEETLE", "GRASSHOPPER", "ANT"};
-        for (String bug : uniqueBugs) {
-            try {
-                File file = new File("images/Hive/" + bug + ".png"); 
-                if (!file.exists()) {
-                    file = new File("images/Hive/" + bug + ".jpg"); 
-                }
-                if (file.exists()) {
-                    bugImages.put(bug, ImageIO.read(file));
-                }
-            } catch (IOException e) { 
-                System.out.println("Could not load image for: " + bug); 
+    String[] uniqueBugs = {"QUEEN", "SPIDER", "BEETLE", "GRASSHOPPER", "ANT"};
+    for (String bug : uniqueBugs) {
+        try {
+            // Thử tìm file .png trước
+            String path = "/images/Hive/" + bug + ".png";
+            java.net.URL imgUrl = getClass().getResource(path);
+            
+            // Nếu không thấy .png, thử tìm .jpg
+            if (imgUrl == null) {
+                path = "/images/Hive/" + bug + ".jpg";
+                imgUrl = getClass().getResource(path);
             }
+
+            if (imgUrl != null) {
+                bugImages.put(bug, ImageIO.read(imgUrl));
+            } else {
+                System.out.println("Resource not found: " + bug);
+            }
+        } catch (IOException e) {
+            System.out.println("Could not load image for: " + bug);
         }
     }
+}
 
     private void spawnAllBugs() {
         boardPanel.removeAll();

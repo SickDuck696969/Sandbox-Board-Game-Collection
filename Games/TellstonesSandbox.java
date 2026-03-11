@@ -2,8 +2,9 @@ package Games;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.io.File;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,7 +15,7 @@ import javax.swing.border.TitledBorder;
 
 public class TellstonesSandbox extends JFrame {
 
-    private final String[] STONE_TYPES = {"Crown", "Shield", "Sword", "Flag", "Knight", "Hammer", "Scales"};
+    private final String[] STONE_TYPES = {"crown", "shield", "sword", "flag", "knight", "hammer", "scales"};
     private List<Stone> poolStones = new ArrayList<>();
     private List<Stone> lineStones = new ArrayList<>();
     
@@ -160,19 +161,29 @@ public class TellstonesSandbox extends JFrame {
     }
 
     private void loadOriginalImages() {
-        for (String type : STONE_TYPES) {
-            stoneImages.put(type, loadRawImage("images/Tellstones/" + type + ".png"));
-        }
-        hiddenImage = loadRawImage("images/Tellstones/Hidden.png");
+    for (String type : STONE_TYPES) {
+        // Bỏ dấu / ở đầu, bắt đầu thẳng bằng images/...
+        stoneImages.put(type, loadRawImage("images/Tellstones/" + type + ".png"));
     }
+    hiddenImage = loadRawImage("images/Tellstones/Hidden.png");
+}
 
-    private Image loadRawImage(String path) {
-        try {
-            File file = new File(path);
-            if (file.exists()) return ImageIO.read(file); 
-        } catch (IOException e) {}
+    private BufferedImage loadRawImage(String path) {
+    try {
+        // ClassLoader tìm tài nguyên không cần dấu / ở đầu
+        URL imgUrl = Thread.currentThread().getContextClassLoader().getResource(path);
+        
+        if (imgUrl != null) {
+            return ImageIO.read(imgUrl);
+        } else {
+            // Log lỗi này để kiểm tra trong terminal nếu vẫn không ra
+            System.err.println("Resource not found: " + path);
+            return null;
+        }
+    } catch (IOException e) {
         return null;
     }
+}
 
     private void updateUIState() {
         linePanel.removeAll();
