@@ -2,16 +2,16 @@ import Games.*;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
+import javax.swing.border.EmptyBorder; 
 
 public class GameSelector extends JFrame {
 
     public GameSelector() {
         setTitle("Sandbox Board Game Collection");
-        setSize(450, 450); // Tăng chiều cao lên 450 để chứa đủ 3 nút cho thoáng
+        setSize(450, 550); // Tăng chiều cao lên 550 để chứa đủ 4 game
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
-        getContentPane().setBackground(new Color(40, 45, 52)); // Nền tối hiện đại
+        getContentPane().setBackground(new Color(40, 45, 52)); 
 
         // --- TIÊU ĐỀ ---
         JLabel titleLabel = new JLabel("GAME SELECTOR", SwingConstants.CENTER);
@@ -22,26 +22,29 @@ public class GameSelector extends JFrame {
 
         // --- KHU VỰC NÚT CHỌN GAME ---
         JPanel buttonPanel = new JPanel();
-        // Chuyển thành GridLayout(3 hàng, 1 cột, khoảng cách dọc 20px)
-        buttonPanel.setLayout(new GridLayout(3, 1, 0, 20)); 
+        buttonPanel.setLayout(new GridLayout(4, 1, 0, 20)); // Đổi thành 4 hàng cho 4 game
         buttonPanel.setOpaque(false);
-        // Tăng lề trái phải lên 70 để các nút không bị quá bè ngang
         buttonPanel.setBorder(new EmptyBorder(10, 70, 30, 70));
 
         // Nút Yahtzee
-        JButton yahtzeeBtn = createGameButton("Yahtzee", new Color(34, 139, 34)); // Xanh lá
-        yahtzeeBtn.addActionListener(e -> launchGame(new YahtzeeSandbox(), "Yahtzee"));
+        JButton yahtzeeBtn = createGameButton("Yahtzee", new Color(34, 139, 34)); 
+        yahtzeeBtn.addActionListener(e -> launchGame(new YahtzeeSandbox()));
         buttonPanel.add(yahtzeeBtn);
 
         // Nút Tellstones
-        JButton tellstonesBtn = createGameButton("Tellstones", new Color(50, 100, 200)); // Xanh dương
-        tellstonesBtn.addActionListener(e -> launchGame(new TellstonesSandbox(), "Tellstones"));
+        JButton tellstonesBtn = createGameButton("Tellstones", new Color(50, 100, 200)); 
+        tellstonesBtn.addActionListener(e -> launchGame(new TellstonesSandbox()));
         buttonPanel.add(tellstonesBtn);
 
         // Nút Hive
-        JButton hiveBtn = createGameButton("Hive", new Color(200, 150, 50)); // Màu mật ong
-        hiveBtn.addActionListener(e -> launchGame(new HiveSandbox(), "Hive"));
+        JButton hiveBtn = createGameButton("Hive", new Color(200, 150, 50)); 
+        hiveBtn.addActionListener(e -> launchGame(new HiveSandbox()));
         buttonPanel.add(hiveBtn);
+
+        // Nút Blokus
+        JButton blokusBtn = createGameButton("Blokus", new Color(138, 43, 226)); // Màu tím mộng mơ
+        blokusBtn.addActionListener(e -> launchGame(new BlokusSandbox()));
+        buttonPanel.add(blokusBtn);
 
         add(buttonPanel, BorderLayout.CENTER);
         
@@ -53,22 +56,19 @@ public class GameSelector extends JFrame {
         add(footerLabel, BorderLayout.SOUTH);
     }
 
-    // Hàm tiện ích tạo nút bấm theo phong cách thiết kế phẳng (Flat Design)
     private JButton createGameButton(String text, Color bgColor) {
         JButton btn = new JButton(text);
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 20)); // Font chữ hiện đại, to hơn một chút
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 20)); 
         btn.setBackground(bgColor);
-        btn.setForeground(Color.BLACK); // Đổi thành màu trắng để nổi bật trên nền đậm
+        btn.setForeground(Color.WHITE); 
         btn.setFocusPainted(false);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         
-        // Tạo viền phẳng hiện đại: Viền ngoài tối màu hơn nền một chút, viền trong là khoảng trống
         btn.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(bgColor.darker(), 2),
             BorderFactory.createEmptyBorder(10, 20, 10, 20)
         ));
         
-        // Hiệu ứng hover cho nút mượt mà
         btn.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
@@ -83,8 +83,8 @@ public class GameSelector extends JFrame {
         return btn;
     }
 
-    // THUẬT TOÁN KHỞI CHẠY GAME VÀ LẮNG NGHE SỰ KIỆN ĐÓNG
-    private void launchGame(JFrame gameFrame, String gameName) {
+    // ĐÃ XÓA BIẾN: String gameName (Giải quyết triệt để cảnh báo của VS Code)
+    private void launchGame(JFrame gameFrame) {
         this.setVisible(false);
         gameFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         gameFrame.setLocationRelativeTo(null);
@@ -92,7 +92,6 @@ public class GameSelector extends JFrame {
         gameFrame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosed(WindowEvent e) {
-                System.out.println("Closed " + gameName + ", returning to Hub...");
                 GameSelector.this.setLocationRelativeTo(null); 
                 GameSelector.this.setVisible(true);
             }
@@ -103,7 +102,9 @@ public class GameSelector extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            // Đã xóa dòng UIManager ép giao diện Windows
+            try { 
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); 
+            } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | UnsupportedLookAndFeelException ignored) {}
             
             GameSelector hub = new GameSelector();
             hub.setLocationRelativeTo(null);

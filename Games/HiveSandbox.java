@@ -87,7 +87,7 @@ public class HiveSandbox extends JFrame {
         JButton btn = new JButton(text);
         btn.setFont(new Font("Arial", Font.BOLD, 12));
         btn.setBackground(bg);
-        btn.setForeground(Color.WHITE);
+        btn.setForeground(Color.BLACK);
         btn.setFocusPainted(false);
         return btn;
     }
