@@ -10,10 +10,12 @@ import javax.swing.*;
 
 public class HiveSandbox extends JFrame {
 
-    private final JPanel boardPanel;
+    private final JPanel playPanel; // Vùng chơi có thể cuộn
+    private final JPanel trayPanel; // Khay chứa cố định
+    private final JScrollPane scrollPane;
     
-    // Kích thước của 1 quân cờ lục giác
     private final int HEX_RADIUS = 40; 
+    private final int BOARD_VIRTUAL_SIZE = 2000; // Kích thước bàn chơi ảo
     
     private final String[] BUG_TYPES = {
         "QUEEN", "SPIDER", "SPIDER", 
@@ -22,310 +24,307 @@ public class HiveSandbox extends JFrame {
         "ANT", "ANT", "ANT"
     };
 
-    // Bộ nhớ đệm lưu trữ hình ảnh
     private final Map<String, Image> bugImages = new HashMap<>();
 
     public HiveSandbox() {
-        setTitle("Hive");
-        setSize(1200, 800);
+        setTitle("Hive Sandbox - Expanded Board");
+        setSize(1200, 850);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
         setResizable(false); 
 
-        // Load toàn bộ ảnh vào RAM trước khi vẽ game
         loadImages();
 
-        // --- TOP: BẢNG ĐIỀU KHIỂN ---
+        // --- TOP PANEL ---
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 5));
         topPanel.setBackground(new Color(40, 45, 52));
         
         JButton resetBtn = new JButton("Reset Game");
         resetBtn.setFont(new Font("Arial", Font.BOLD, 14));
-        resetBtn.setFocusPainted(false);
         resetBtn.addActionListener(e -> spawnAllBugs());
         topPanel.add(resetBtn);
 
-        // Nút Tiếng Việt
-        JButton viBtn = new JButton("VI");
-        viBtn.setFont(new Font("Arial", Font.BOLD, 12));
-        viBtn.setBackground(new Color(200, 50, 50));
-        viBtn.setForeground(Color.RED);
-        viBtn.setFocusPainted(false);
-        viBtn.setToolTipText("Luật chơi (Tiếng Việt)");
+        JButton viBtn = createLangButton("VI", new Color(200, 50, 50));
         viBtn.addActionListener(e -> showRulesVI());
         topPanel.add(viBtn);
 
-        // Nút Tiếng Anh
-        JButton enBtn = new JButton("EN");
-        enBtn.setFont(new Font("Arial", Font.BOLD, 12));
-        enBtn.setBackground(new Color(50, 100, 200));
-        enBtn.setForeground(Color.RED);
-        enBtn.setFocusPainted(false);
-        enBtn.setToolTipText("Game Rules (English)");
+        JButton enBtn = createLangButton("EN", new Color(50, 100, 200));
         enBtn.addActionListener(e -> showRulesEN());
         topPanel.add(enBtn);
         
-        JLabel hintLabel = new JLabel("  |  Drag bugs from the bottom tray to the board!");
-        hintLabel.setForeground(Color.LIGHT_GRAY);
-        hintLabel.setFont(new Font("Arial", Font.ITALIC, 14));
-        topPanel.add(hintLabel);
-        
         add(topPanel, BorderLayout.NORTH);
 
-        // --- CENTER: BÀN CHƠI & KHAY CHỨA ---
-        boardPanel = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                g.setColor(new Color(180, 170, 150));
-                g.drawLine(0, 530, getWidth(), 530);
-                g.drawLine(0, 531, getWidth(), 531); 
-                
-                g.setColor(new Color(210, 200, 180));
-                g.fillRect(0, 532, getWidth(), getHeight() - 532);
-            }
-        };
-        boardPanel.setLayout(null); 
-        boardPanel.setBackground(new Color(230, 220, 200)); 
-        add(boardPanel, BorderLayout.CENTER);
+        // --- CENTER: SCROLLABLE PLAY AREA ---
+        playPanel = new JPanel();
+        playPanel.setLayout(null);
+        playPanel.setBackground(new Color(230, 220, 200));
+        playPanel.setPreferredSize(new Dimension(BOARD_VIRTUAL_SIZE, BOARD_VIRTUAL_SIZE));
+
+        scrollPane = new JScrollPane(playPanel);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
+        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(180, 170, 150), 2));
+        add(scrollPane, BorderLayout.CENTER);
+
+        // --- SOUTH: FIXED TRAY AREA ---
+        trayPanel = new JPanel();
+        trayPanel.setLayout(null);
+        trayPanel.setPreferredSize(new Dimension(1200, 220));
+        trayPanel.setBackground(new Color(210, 200, 180));
+        trayPanel.setBorder(BorderFactory.createMatteBorder(2, 0, 0, 0, new Color(150, 140, 120)));
+        add(trayPanel, BorderLayout.SOUTH);
 
         spawnAllBugs();
+
+        // Cuộn vào giữa bàn chơi khi bắt đầu
+        SwingUtilities.invokeLater(() -> {
+            scrollPane.getHorizontalScrollBar().setValue((BOARD_VIRTUAL_SIZE - 1200) / 2);
+            scrollPane.getVerticalScrollBar().setValue((BOARD_VIRTUAL_SIZE - 600) / 2);
+        });
     }
 
-    // Tải hình ảnh từ thư mục "images"
-    private void loadImages() {
-    String[] uniqueBugs = {"QUEEN", "SPIDER", "BEETLE", "GRASSHOPPER", "ANT"};
-    for (String bug : uniqueBugs) {
-        try {
-            // Thử tìm file .png trước
-            String path = "/images/Hive/" + bug + ".png";
-            java.net.URL imgUrl = getClass().getResource(path);
-            
-            // Nếu không thấy .png, thử tìm .jpg
-            if (imgUrl == null) {
-                path = "/images/Hive/" + bug + ".jpg";
-                imgUrl = getClass().getResource(path);
-            }
+    private JButton createLangButton(String text, Color bg) {
+        JButton btn = new JButton(text);
+        btn.setFont(new Font("Arial", Font.BOLD, 12));
+        btn.setBackground(bg);
+        btn.setForeground(Color.WHITE);
+        btn.setFocusPainted(false);
+        return btn;
+    }
 
-            if (imgUrl != null) {
-                bugImages.put(bug, ImageIO.read(imgUrl));
-            } else {
-                System.out.println("Resource not found: " + bug);
+    private void loadImages() {
+        String[] uniqueBugs = {"QUEEN", "SPIDER", "BEETLE", "GRASSHOPPER", "ANT"};
+        for (String bug : uniqueBugs) {
+            try {
+                String path = "/images/Hive/" + bug + ".png";
+                java.net.URL imgUrl = getClass().getResource(path);
+                if (imgUrl == null) {
+                    path = "/images/Hive/" + bug + ".jpg";
+                    imgUrl = getClass().getResource(path);
+                }
+                if (imgUrl != null) bugImages.put(bug, ImageIO.read(imgUrl));
+            } catch (IOException e) {
+                System.out.println("Error loading: " + bug);
             }
-        } catch (IOException e) {
-            System.out.println("Could not load image for: " + bug);
         }
     }
-}
 
     private void spawnAllBugs() {
-        boardPanel.removeAll();
-        int startY = 540; 
-        spawnPlayerBugs(Color.WHITE, Color.BLACK, 30, startY, "White Player");
-        spawnPlayerBugs(Color.DARK_GRAY, Color.WHITE, 720, startY, "Black Player");
-        boardPanel.repaint();
+        playPanel.removeAll();
+        trayPanel.removeAll();
+        
+        // Đặt quân vào khay cố định (tọa độ tương đối với trayPanel)
+        spawnPlayerBugs(Color.WHITE, Color.BLACK, 30, 20, "White", trayPanel);
+        spawnPlayerBugs(Color.DARK_GRAY, Color.WHITE, 720, 20, "Black", trayPanel);
+        
+        trayPanel.repaint();
+        playPanel.repaint();
     }
 
-    private void spawnPlayerBugs(Color bgColor, Color fgColor, int startX, int startY, String tooltip) {
-        int xOffset = 0;
-        int yOffset = 0;
-        int colCount = 0;
-
-        int hexWidth = (int) (Math.sqrt(3) * HEX_RADIUS);
-        int hexHeight = 2 * HEX_RADIUS;
+    private void spawnPlayerBugs(Color bg, Color fg, int x, int y, String team, JPanel p) {
+        int xOff = 0; int yOff = 0; int count = 0;
+        int hWidth = (int)(Math.sqrt(3) * HEX_RADIUS);
+        int hHeight = 2 * HEX_RADIUS;
 
         for (String bugName : BUG_TYPES) {
             Image img = bugImages.get(bugName);
-            HexToken bug = new HexToken(bugName, bgColor, fgColor, img);
-            bug.setToolTipText(tooltip + " - " + bugName);
+            HexToken token = new HexToken(bugName, bg, fg, img);
             
-            bug.setLocation(startX + xOffset, startY + yOffset);
-            boardPanel.add(bug);
+            // Fix: Sử dụng biến team làm Tooltip
+            token.setToolTipText(team + " - " + bugName);
+            
+            token.setLocation(x + xOff, y + yOff);
+            p.add(token);
 
-            colCount++;
-            xOffset += hexWidth + 5; 
-            
-            if (colCount >= 6) { 
-                colCount = 0;
-                xOffset = hexWidth / 2; 
-                yOffset += hexHeight + 5; 
-            }
+            count++;
+            xOff += hWidth + 5;
+            if (count >= 6) { count = 0; xOff = hWidth/2; yOff += hHeight + 5; }
         }
     }
 
     // ==========================================
-    // LOGIC HIỂN THỊ LUẬT CHƠI (VI / EN)
-    // ==========================================
-    private void showRulesVI() {
-        String rules = """
-                TÓM TẮT LUẬT CHƠI HIVE
-                
-                1. MỤC TIÊU:
-                   - Bao vây hoàn toàn Ong Chúa (Queen) của đối phương bằng bất kỳ quân nào (kể cả quân của mình hay địch).
-                
-                2. CÁCH ĐẶT QUÂN:
-                   - Lượt đầu tiên: Hai bên đặt 1 quân bất kỳ chạm nhau.
-                   - Từ lượt 2 trở đi: Quân mới đặt xuống chỉ được chạm quân phe mình, KHÔNG được chạm quân đối phương.
-                
-                3. CÁCH DI CHUYỂN:
-                   - Bạn CHỈ ĐƯỢC DI CHUYỂN sau khi đã đặt Ong Chúa (bắt buộc đặt Ong Chúa trong 4 lượt đầu).
-                   - Luật Một Tổ (One Hive): Trong quá trình di chuyển, tổ ong không bao giờ được đứt đoạn thành 2 phần.
-                
-                4. KHẢ NĂNG CỦA CÁC LOÀI:
-                   - ONG CHÚA (Queen): Chỉ bò 1 bước.
-                   - BỌ HUNG (Beetle): Bò 1 bước, HOẶC trèo lên đầu các quân khác (quân bị đè không thể di chuyển).
-                   - CHÂU CHẤU (Grasshopper): Nhảy qua đầu các quân khác theo một đường thẳng đến ô trống đầu tiên.
-                   - NHỆN (Spider): Bò ven theo tổ CHÍNH XÁC 3 bước (không được đi ngược lại).
-                   - KIẾN (Ant): Bò ven theo tổ đến BẤT KỲ ô trống nào.""";
-        
-        JOptionPane.showMessageDialog(this, rules, "Luật Chơi - Hive", JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    private void showRulesEN() {
-        String rules = """
-                       HIVE - QUICK RULES SUMMARY
-                       
-                       1. GOAL:
-                          - Completely surround the opponent's Queen Bee with any bugs (yours or theirs).
-                       
-                       2. PLACEMENT:
-                          - Turn 1: Players place one bug touching each other.
-                          - After Turn 1: New bugs must ONLY touch your own color. They cannot touch opponent's bugs.
-                       
-                       3. MOVEMENT:
-                          - You CANNOT move any bugs until your Queen is placed (must be placed within your first 4 turns).
-                          - ONE HIVE RULE: The hive must never be broken into two separate parts during or after a move.
-                       
-                       4. BUG ABILITIES:
-                          - QUEEN: Moves exactly 1 space.
-                          - BEETLE: Moves 1 space OR climbs on top of the hive (bugs underneath cannot move).
-                          - GRASSHOPPER: Jumps over other bugs in a straight line to the next empty space.
-                          - SPIDER: Moves EXACTLY 3 spaces around the outside edge (no backtracking).
-                          - ANT: Moves anywhere around the outside edge of the hive.""";
-        
-        JOptionPane.showMessageDialog(this, rules, "Game Rules - Hive", JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    // ==========================================
-    // CUSTOM HEXAGON COMPONENT
+    // CUSTOM HEXAGON TOKEN
     // ==========================================
     private class HexToken extends JComponent {
         private final String bugName;
-        private final Color bgColor;
-        private final Color fgColor;
+        private final Color bgColor, fgColor;
         private final Image bugImage; 
         private Polygon hexPolygon;
-        
-        private int mouseClickX, mouseClickY;
+        private int mouseX, mouseY; // Đã đồng bộ tên biến
 
-        public HexToken(String bugName, Color bgColor, Color fgColor, Image bugImage) {
-            this.bugName = bugName;
-            this.bgColor = bgColor;
-            this.fgColor = fgColor;
-            this.bugImage = bugImage;
-
-            int width = (int) (Math.sqrt(3) * HEX_RADIUS);
-            int height = 2 * HEX_RADIUS;
-            setSize(width, height);
-            
+        public HexToken(String name, Color bg, Color fg, Image img) {
+            this.bugName = name; this.bgColor = bg; this.fgColor = fg; this.bugImage = img;
+            setSize((int)(Math.sqrt(3) * HEX_RADIUS), 2 * HEX_RADIUS);
             createHexagon();
             setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
             addMouseListener(new MouseAdapter() {
                 @Override
                 public void mousePressed(MouseEvent e) {
-                    mouseClickX = e.getX();
-                    mouseClickY = e.getY();
-                    getParent().setComponentZOrder(HexToken.this, 0);
-                    getParent().repaint();
+                    mouseX = e.getX();
+                    mouseY = e.getY();
+                    
+                    // NÂNG CẤP: Đưa quân cờ lên Lớp Nổi (LayeredPane) cao nhất của cửa sổ
+                    JLayeredPane layeredPane = getRootPane().getLayeredPane();
+                    
+                    // Tính toán quy đổi tọa độ từ nơi đang đứng sang tọa độ của Lớp Nổi
+                    Point p = SwingUtilities.convertPoint(getParent(), getLocation(), layeredPane);
+                    
+                    Container oldParent = getParent();
+                    oldParent.remove(HexToken.this);
+                    
+                    // Thêm vào lớp DRAG_LAYER để quân cờ luôn bay phía trên mọi thứ
+                    layeredPane.add(HexToken.this, JLayeredPane.DRAG_LAYER);
+                    setLocation(p);
+                    
+                    layeredPane.repaint();
+                    oldParent.repaint();
+                }
+
+                @Override
+                public void mouseReleased(MouseEvent e) {
+                    JLayeredPane layeredPane = getRootPane().getLayeredPane();
+                    
+                    // Xác định tọa độ Màn Hình của tâm quân cờ để xem nó đang bay ở khu vực nào
+                    Point centerScreen = new Point(getWidth() / 2, getHeight() / 2);
+                    SwingUtilities.convertPointToScreen(centerScreen, HexToken.this);
+                    
+                    Point trayScreen;
+                    try {
+                        trayScreen = trayPanel.getLocationOnScreen();
+                    } catch (Exception ex) { return; }
+                    
+                    if (centerScreen.y >= trayScreen.y) {
+                        // --- NẾU THẢ VÀO KHAY CHỨA (TRAY) ---
+                        Point p = SwingUtilities.convertPoint(layeredPane, getLocation(), trayPanel);
+                        layeredPane.remove(HexToken.this);
+                        trayPanel.add(HexToken.this);
+                        setLocation(p);
+                        trayPanel.setComponentZOrder(HexToken.this, 0); // Đảm bảo nổi lên trên các quân khác ở khay
+                    } else {
+                        // --- NẾU THẢ VÀO BÀN CHƠI (BOARD) ---
+                        Point p = SwingUtilities.convertPoint(layeredPane, getLocation(), playPanel);
+                        
+                        // Khóa không cho rơi ra ngoài vũ trụ 2000x2000
+                        if (p.x < 0) p.x = 0;
+                        if (p.y < 0) p.y = 0;
+                        if (p.x > playPanel.getWidth() - getWidth()) p.x = playPanel.getWidth() - getWidth();
+                        if (p.y > playPanel.getHeight() - getHeight()) p.y = playPanel.getHeight() - getHeight();
+
+                        layeredPane.remove(HexToken.this);
+                        playPanel.add(HexToken.this);
+                        setLocation(p);
+                        playPanel.setComponentZOrder(HexToken.this, 0); // Đảm bảo đè lên các quân cờ khác (Luật bọ hung)
+                    }
+                    
+                    // Cập nhật lại giao diện
+                    trayPanel.repaint();
+                    playPanel.repaint();
+                    layeredPane.repaint();
                 }
             });
 
             addMouseMotionListener(new MouseMotionAdapter() {
                 @Override
                 public void mouseDragged(MouseEvent e) {
-                    int newX = getX() + e.getX() - mouseClickX;
-                    int newY = getY() + e.getY() - mouseClickY;
-                    
-                    if (newX < 0) newX = 0;
-                    if (newY < 0) newY = 0;
-                    if (newX > getParent().getWidth() - getWidth()) newX = getParent().getWidth() - getWidth();
-                    if (newY > getParent().getHeight() - getHeight()) newY = getParent().getHeight() - getHeight();
-
-                    setLocation(newX, newY);
+                    // Do đang ở trên lớp Nổi, ta cứ việc di chuyển thoải mái không sợ bị khuất
+                    int nx = getX() + e.getX() - mouseX;
+                    int ny = getY() + e.getY() - mouseY;
+                    setLocation(nx, ny);
+                    getParent().repaint();
                 }
             });
         }
 
         private void createHexagon() {
             hexPolygon = new Polygon();
-            int centerX = getWidth() / 2;
-            int centerY = getHeight() / 2;
-            
+            int cx = getWidth() / 2; int cy = getHeight() / 2;
             for (int i = 0; i < 6; i++) {
-                int xVal = (int) (centerX + HEX_RADIUS * Math.cos(i * Math.PI / 3 + Math.PI / 6));
-                int yVal = (int) (centerY + HEX_RADIUS * Math.sin(i * Math.PI / 3 + Math.PI / 6));
-                hexPolygon.addPoint(xVal, yVal);
+                int x = (int)(cx + HEX_RADIUS * Math.cos(i * Math.PI / 3 + Math.PI / 6));
+                int y = (int)(cy + HEX_RADIUS * Math.sin(i * Math.PI / 3 + Math.PI / 6));
+                hexPolygon.addPoint(x, y);
             }
         }
 
         @Override
-        public boolean contains(int x, int y) {
-            return hexPolygon.contains(x, y);
-        }
+        public boolean contains(int x, int y) { return hexPolygon.contains(x, y); }
 
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
             Graphics2D g2d = (Graphics2D) g;
-            
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+
+            // HIGHLIGHT CHO QUEEN
+            if (bugName.equals("QUEEN")) {
+                // Hiệu ứng hào quang (Glow)
+                g2d.setColor(new Color(255, 215, 0, 80));
+                g2d.fillOval(0, 0, getWidth(), getHeight());
+            }
 
             g2d.setColor(bgColor);
             g2d.fillPolygon(hexPolygon);
 
             if (bugImage != null) {
-                int maxWidth = (int)(getWidth() * 0.65);
-                int maxHeight = (int)(getHeight() * 0.65);
+                int iw = (int)(getWidth()*0.65), ih = (int)(getHeight()*0.65);
+                double s = Math.min((double)iw/bugImage.getWidth(null), (double)ih/bugImage.getHeight(null));
+                int sw = (int)(bugImage.getWidth(null)*s), sh = (int)(bugImage.getHeight(null)*s);
+                g2d.drawImage(bugImage, (getWidth()-sw)/2, (getHeight()-sh)/2, sw, sh, null);
+            }
 
-                int imgWidth = bugImage.getWidth(null);
-                int imgHeight = bugImage.getHeight(null);
-                
-                double scale = Math.min((double)maxWidth / imgWidth, (double)maxHeight / imgHeight); 
-                int scaledWidth = (int)(imgWidth * scale);
-                int scaledHeight = (int)(imgHeight * scale);
-
-                int x = (getWidth() - scaledWidth) / 2;
-                int y = (getHeight() - scaledHeight) / 2;
-
-                g2d.drawImage(bugImage, x, y, scaledWidth, scaledHeight, this);
+            // VIỀN CHO QUEEN
+            if (bugName.equals("QUEEN")) {
+                g2d.setColor(new Color(255, 165, 0)); // Màu Cam Vàng rực rỡ
+                g2d.setStroke(new BasicStroke(6, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                g2d.drawPolygon(hexPolygon);
+                // Thêm viền phụ bên trong để tạo độ sâu
+                g2d.setStroke(new BasicStroke(1));
+                g2d.setColor(Color.WHITE);
+                g2d.drawPolygon(hexPolygon);
             } else {
                 g2d.setColor(fgColor);
-                g2d.setFont(new Font("Arial", Font.BOLD, 10));
-                FontMetrics fm = g2d.getFontMetrics();
-                int textWidth = fm.stringWidth(bugName);
-                int textHeight = fm.getAscent();
-                g2d.drawString(bugName, (getWidth() - textWidth) / 2, (getHeight() + textHeight) / 2 - 2);
-            }
-
-            if (bugName.equals("QUEEN")) {
-                g2d.setColor(new Color(255, 200, 0)); 
-                g2d.setStroke(new BasicStroke(4));
-            } else {
-                g2d.setColor(fgColor); 
                 g2d.setStroke(new BasicStroke(2));
+                g2d.drawPolygon(hexPolygon);
             }
-            g2d.drawPolygon(hexPolygon);
         }
+    }
+
+    // --- RULES LOGIC (VI / EN) ---
+    private void showRulesVI() {
+        String rules = """
+                TÓM TẮT LUẬT CHƠI HIVE
+                
+                1. MỤC TIÊU: Bao vây Queen của đối phương.
+                2. QUEEN: Cực kỳ quan trọng. Phải đặt xuống trong 4 lượt đầu.
+                3. DI CHUYỂN:
+                   - Queen: 1 bước.
+                   - Beetle: 1 bước (có thể đè quân khác).
+                   - Grasshopper: Nhảy thẳng qua các quân khác.
+                   - Spider: Đúng 3 bước ven tổ.
+                   - Ant: Di chuyển vô hạn ven tổ.
+                4. LUẬT MỘT TỔ: Tổ ong không được đứt đoạn.""";
+        JOptionPane.showMessageDialog(this, rules, "Luật Chơi", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void showRulesEN() {
+        String rules = """
+                HIVE RULES SUMMARY
+                
+                1. GOAL: Surround the opponent's Queen.
+                2. QUEEN: Must be placed within the first 4 turns.
+                3. MOVEMENT:
+                   - Queen: 1 step.
+                   - Beetle: 1 step (can climb on top).
+                   - Grasshopper: Jumps over others in a line.
+                   - Spider: Exactly 3 steps around edge.
+                   - Ant: Anywhere around the edge.
+                4. ONE HIVE RULE: The hive must never be broken.""";
+        JOptionPane.showMessageDialog(this, rules, "Rules", JOptionPane.INFORMATION_MESSAGE);
     }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | UnsupportedLookAndFeelException ignored) {}
-            HiveSandbox game = new HiveSandbox();
-            game.setLocationRelativeTo(null);
-            game.setVisible(true);
+            new HiveSandbox().setVisible(true);
         });
     }
 }

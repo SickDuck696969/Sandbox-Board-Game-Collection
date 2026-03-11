@@ -217,7 +217,16 @@ public class TellstonesSandbox extends JFrame {
                 pressPoint = e.getPoint();
                 draggedStone = stone;
                 
-                dragLabel.setStone(stone); 
+                // NÂNG CẤP CHỮA LỖI: Cập nhật lại toàn bộ hình ảnh cho dragLabel
+                dragLabel.setStone(stone);
+                
+                // Lấy ảnh gốc của viên đá đang kéo để đưa cho dragLabel
+                dragLabel.symbolImage = stoneImages.get(stone.type); 
+                dragLabel.hiddenImage = hiddenImage;
+                
+                // Cập nhật lại màu sắc (Úp/Ngửa) cho dragLabel
+                dragLabel.updateButtonState(); 
+                
                 dragLabel.setBounds(0, 0, 120, 120); 
             }
 
@@ -351,8 +360,8 @@ public class TellstonesSandbox extends JFrame {
 
     private final class ScalableStoneButton extends JButton {
         private Stone currentStone;
-        private Image symbolImage; 
-        private Image hiddenImage; 
+        Image symbolImage; 
+        Image hiddenImage; 
         
         public ScalableStoneButton() { 
             setFocusPainted(false);
