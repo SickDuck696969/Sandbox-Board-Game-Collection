@@ -33,7 +33,7 @@ public class HiveSandbox extends JFrame {
     private JPopupMenu activePopup = null;
 
     public HiveSandbox() {
-        setTitle("Hive Sandbox - Perfect Snap & Stacking");
+        setTitle("Hive");
         setSize(1200, 850);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());

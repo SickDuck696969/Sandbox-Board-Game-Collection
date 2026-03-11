@@ -31,14 +31,13 @@ public class TellstonesSandbox extends JFrame {
     private Map<String, Image> stoneImages = new HashMap<>();
     private Image hiddenImage;
 
-    // Make score labels accessible to the reset method
     private JLabel p1ScoreLabel = new JLabel("0");
     private JLabel p2ScoreLabel = new JLabel("0");
 
     public TellstonesSandbox() {
         setTitle("Tellstones");
-        setSize(1300, 600);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(1300, 650);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
 
         loadOriginalImages();
@@ -49,19 +48,21 @@ public class TellstonesSandbox extends JFrame {
 
         // --- TOP: SCOREBOARD & RESET ---
         JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBackground(new Color(25, 30, 36)); // Màu nền thanh công cụ tối hiện đại
         topPanel.setBorder(BorderFactory.createEmptyBorder(10, 30, 10, 30));
         
         topPanel.add(createPlayerScorePanel("Player 1", p1ScoreLabel), BorderLayout.WEST);
         
-        // Add Reset Button to the center
         JButton resetBtn = new JButton("Reset Game");
-        resetBtn.setFont(new Font("Arial", Font.BOLD, 16));
+        resetBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
         resetBtn.setBackground(new Color(200, 60, 60));
         resetBtn.setForeground(Color.BLACK);
         resetBtn.setFocusPainted(false);
+        resetBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         resetBtn.addActionListener(e -> resetGameState());
         
         JPanel centerWrapper = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        centerWrapper.setOpaque(false);
         centerWrapper.add(resetBtn);
         topPanel.add(centerWrapper, BorderLayout.CENTER);
         
@@ -69,29 +70,29 @@ public class TellstonesSandbox extends JFrame {
         
         add(topPanel, BorderLayout.NORTH);
 
-        // --- CENTER: THE LINE ---
+        // --- CENTER: THE LINE (THẢM CHƠI MÀU XANH) ---
         linePanel = new JPanel();
         linePanel.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 50));
-        linePanel.setBackground(new Color(34, 40, 49));
+        linePanel.setBackground(new Color(38, 89, 53)); // Thảm nhung xanh lá chuẩn Casino/Boardgame
         linePanel.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(Color.GRAY),
+                BorderFactory.createLineBorder(new Color(100, 150, 100), 2),
                 "The Line (Left-Click two stones to SWAP | Drag to gaps to INSERT)",
                 TitledBorder.CENTER, TitledBorder.TOP,
-                new Font("Arial", Font.BOLD, 14), Color.LIGHT_GRAY));
+                new Font("Segoe UI", Font.BOLD, 16), new Color(200, 230, 200)));
 
         JScrollPane scrollPane = new JScrollPane(linePanel);
         scrollPane.setBorder(null);
         add(scrollPane, BorderLayout.CENTER);
 
-        // --- BOTTOM: THE POOL ---
+        // --- BOTTOM: THE POOL (KHAY GỖ ĐEN) ---
         poolPanel = new JPanel();
         poolPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 30));
-        poolPanel.setBackground(new Color(57, 62, 70));
+        poolPanel.setBackground(new Color(40, 42, 45)); // Khay đen nhám
         poolPanel.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(Color.GRAY),
+                BorderFactory.createMatteBorder(4, 0, 0, 0, new Color(70, 75, 80)),
                 "The Pool (Drag to move | Right-Click to Flip)",
                 TitledBorder.CENTER, TitledBorder.TOP,
-                new Font("Arial", Font.BOLD, 14), Color.LIGHT_GRAY));
+                new Font("Segoe UI", Font.BOLD, 16), Color.LIGHT_GRAY));
         poolPanel.setPreferredSize(new Dimension(1000, 220));
         add(poolPanel, BorderLayout.SOUTH);
 
@@ -109,46 +110,42 @@ public class TellstonesSandbox extends JFrame {
         updateUIState();
     }
 
-    // --- NEW: RESET LOGIC ---
     private void resetGameState() {
-        // Clear both lists
         lineStones.clear();
         poolStones.clear();
-        
-        // Regenerate the 7 default face-up stones in the pool
         for (String type : STONE_TYPES) {
             poolStones.add(new Stone(type, true));
         }
-        
-        // Reset state variables
         selectedSwapStone = null;
         draggedStone = null;
-        
-        // Reset scores
         p1ScoreLabel.setText("0");
         p2ScoreLabel.setText("0");
-        
-        // Repaint the screen
         updateUIState();
     }
 
     private JPanel createPlayerScorePanel(String playerName, JLabel scoreLabel) {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
+        panel.setOpaque(false);
         JLabel nameLabel = new JLabel(playerName + ": ");
-        nameLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        nameLabel.setForeground(Color.WHITE);
         
-        scoreLabel.setFont(new Font("Arial", Font.BOLD, 24));
-        scoreLabel.setForeground(new Color(40, 120, 200));
+        scoreLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        scoreLabel.setForeground(new Color(100, 200, 255)); // Số điểm màu xanh Cyan sáng
         
         JButton minusBtn = new JButton("-");
+        minusBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
         minusBtn.setFocusPainted(false);
+        minusBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         minusBtn.addActionListener(e -> {
             int score = Integer.parseInt(scoreLabel.getText());
             if (score > 0) scoreLabel.setText(String.valueOf(score - 1));
         });
         
         JButton plusBtn = new JButton("+");
+        plusBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
         plusBtn.setFocusPainted(false);
+        plusBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         plusBtn.addActionListener(e -> {
             scoreLabel.setText(String.valueOf(Integer.parseInt(scoreLabel.getText()) + 1));
         });
@@ -161,29 +158,25 @@ public class TellstonesSandbox extends JFrame {
     }
 
     private void loadOriginalImages() {
-    for (String type : STONE_TYPES) {
-        // Bỏ dấu / ở đầu, bắt đầu thẳng bằng images/...
-        stoneImages.put(type, loadRawImage("images/Tellstones/" + type + ".png"));
+        for (String type : STONE_TYPES) {
+            stoneImages.put(type, loadRawImage("images/Tellstones/" + type + ".png"));
+        }
+        hiddenImage = loadRawImage("images/Tellstones/Hidden.png");
     }
-    hiddenImage = loadRawImage("images/Tellstones/Hidden.png");
-}
 
     private BufferedImage loadRawImage(String path) {
-    try {
-        // ClassLoader tìm tài nguyên không cần dấu / ở đầu
-        URL imgUrl = Thread.currentThread().getContextClassLoader().getResource(path);
-        
-        if (imgUrl != null) {
-            return ImageIO.read(imgUrl);
-        } else {
-            // Log lỗi này để kiểm tra trong terminal nếu vẫn không ra
-            System.err.println("Resource not found: " + path);
+        try {
+            URL imgUrl = Thread.currentThread().getContextClassLoader().getResource(path);
+            if (imgUrl != null) {
+                return ImageIO.read(imgUrl);
+            } else {
+                System.err.println("Resource not found: " + path);
+                return null;
+            }
+        } catch (IOException e) {
             return null;
         }
-    } catch (IOException e) {
-        return null;
     }
-}
 
     private void updateUIState() {
         linePanel.removeAll();
@@ -217,14 +210,9 @@ public class TellstonesSandbox extends JFrame {
                 pressPoint = e.getPoint();
                 draggedStone = stone;
                 
-                // NÂNG CẤP CHỮA LỖI: Cập nhật lại toàn bộ hình ảnh cho dragLabel
                 dragLabel.setStone(stone);
-                
-                // Lấy ảnh gốc của viên đá đang kéo để đưa cho dragLabel
                 dragLabel.symbolImage = stoneImages.get(stone.type); 
                 dragLabel.hiddenImage = hiddenImage;
-                
-                // Cập nhật lại màu sắc (Úp/Ngửa) cho dragLabel
                 dragLabel.updateButtonState(); 
                 
                 dragLabel.setBounds(0, 0, 120, 120); 
@@ -234,8 +222,13 @@ public class TellstonesSandbox extends JFrame {
             public void mouseDragged(MouseEvent e) {
                 if (draggedStone != null && pressPoint != null) {
                     if (pressPoint.distance(e.getPoint()) > 5) {
-                        glassPane.setVisible(true);
-                        dragLabel.setVisible(true);
+                        // SỬA LỖI TÀNG HÌNH KHI KÉO: Ẩn nút gốc khi kéo đi
+                        if (!dragLabel.isVisible()) {
+                            btn.setVisible(false);
+                            glassPane.setVisible(true);
+                            dragLabel.setVisible(true);
+                        }
+                        
                         Point p = e.getLocationOnScreen();
                         SwingUtilities.convertPointFromScreen(p, glassPane);
                         dragLabel.setLocation(p.x - 60, p.y - 60);
@@ -262,7 +255,7 @@ public class TellstonesSandbox extends JFrame {
                 }
                 
                 draggedStone = null;
-                updateUIState();
+                updateUIState(); // Hàm này sẽ tự làm mới và hiện lại mọi viên đá đang có trong List
             }
         };
 
@@ -276,10 +269,10 @@ public class TellstonesSandbox extends JFrame {
 
         if (selectedSwapStone == null) {
             selectedSwapStone = clickedStone;
-            updateUIState(); // Force repaint to show the green selection border
+            updateUIState(); 
         } else if (selectedSwapStone == clickedStone) {
             selectedSwapStone = null;
-            updateUIState(); // Force repaint to clear the border
+            updateUIState(); 
         } else {
             int index1 = lineStones.indexOf(selectedSwapStone);
             int index2 = lineStones.indexOf(clickedStone);
@@ -358,23 +351,31 @@ public class TellstonesSandbox extends JFrame {
         }
     }
 
+    // ==========================================
+    // NÂNG CẤP: UI VIÊN ĐÁ BO TRÒN VÀ CÓ BÓNG ĐỔ
+    // ==========================================
     private final class ScalableStoneButton extends JButton {
         private Stone currentStone;
         Image symbolImage; 
         Image hiddenImage; 
         
         public ScalableStoneButton() { 
-            setFocusPainted(false);
-            setBorder(BorderFactory.createLineBorder(Color.YELLOW, 4));
+            setupButtonUI();
         }
 
         public ScalableStoneButton(Stone stone, Image symbol, Image hidden) {
             this.currentStone = stone;
             this.symbolImage = symbol;
             this.hiddenImage = hidden;
-            
-            setFocusPainted(false);
+            setupButtonUI();
             updateButtonState(); 
+        }
+        
+        private void setupButtonUI() {
+            setFocusPainted(false);
+            setContentAreaFilled(false); // Xóa nền mặc định
+            setBorderPainted(false);     // Xóa viền Windows mặc định
+            setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         }
         
         public void setStone(Stone stone) { 
@@ -386,59 +387,66 @@ public class TellstonesSandbox extends JFrame {
         public Stone getStone() { return this.currentStone; }
 
         public void updateButtonState() {
-            if (currentStone == null) return;
-
-            if (currentStone == selectedSwapStone) {
-                setBorder(BorderFactory.createLineBorder(Color.GREEN, 5));
-            } else {
-                setBorder(BorderFactory.createRaisedBevelBorder());
+            if (currentStone == null) {
             }
-
-            if (!currentStone.faceUp) {
-                setBackground(Color.DARK_GRAY);
-                setForeground(Color.WHITE);
-            } else {
-                setBackground(new Color(238, 238, 238));
-                setForeground(Color.BLACK);
-            }
+            // Không cần set Border/Background ở đây nữa vì paintComponent sẽ lo việc đó
         }
 
         @Override
         protected void paintComponent(Graphics g) {
-            super.paintComponent(g); 
             if (currentStone == null) return;
-
-            Image rawImage = currentStone.faceUp ? symbolImage : hiddenImage;
-            String textFallback = currentStone.faceUp ? currentStone.type : "? Hidden ?";
-
-            if (rawImage == null) {
-                setIcon(null);
-                setText(textFallback);
-                return;
-            }
-
-            setText("");
-            setIcon(null); 
-
+            
             Graphics2D g2d = (Graphics2D) g;
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 
-            int btnWidth = getWidth();
-            int btnHeight = getHeight();
-            int padding = (int)(Math.min(btnWidth, btnHeight) * 0.10);
+            int w = getWidth();
+            int h = getHeight();
+            int arc = 40; // Độ bo tròn góc
             
-            int maxWidth = btnWidth - (padding * 2);
-            int maxHeight = btnHeight - (padding * 2);
+            // 1. VẼ BÓNG ĐỔ (Drop Shadow)
+            g2d.setColor(new Color(0, 0, 0, 80));
+            g2d.fillRoundRect(8, 8, w - 16, h - 16, arc, arc);
 
-            int imgWidth = rawImage.getWidth(null);
-            int imgHeight = rawImage.getHeight(null);
+            // 2. VẼ NỀN VIÊN ĐÁ (Sáng nếu lật ngửa, Tối nếu úp)
+            g2d.setColor(currentStone.faceUp ? new Color(245, 245, 240) : new Color(60, 65, 70));
+            g2d.fillRoundRect(4, 4, w - 16, h - 16, arc, arc);
+
+            // 3. VẼ VIÊN (Stroke) VÀ VIỀN CHỌN SWAP (Nếu có)
+            if (currentStone == selectedSwapStone) {
+                g2d.setColor(new Color(50, 205, 50)); // Viền Xanh lá chói khi được chọn Swap
+                g2d.setStroke(new BasicStroke(4));
+            } else {
+                g2d.setColor(new Color(150, 150, 150)); // Viền xám bạc sang trọng
+                g2d.setStroke(new BasicStroke(2));
+            }
+            g2d.drawRoundRect(4, 4, w - 16, h - 16, arc, arc);
+
+            // 4. VẼ ICON BÊN TRONG (Nếu có ảnh)
+            Image rawImage = currentStone.faceUp ? symbolImage : hiddenImage;
             
-            double scale = Math.min((double)maxWidth / imgWidth, (double)maxHeight / imgHeight); 
-            int scaledWidth = (int)(imgWidth * scale);
-            int scaledHeight = (int)(imgHeight * scale);
+            if (rawImage != null) {
+                int padding = (int)(Math.min(w, h) * 0.15);
+                int maxWidth = w - (padding * 2) - 16;
+                int maxHeight = h - (padding * 2) - 16;
 
-            g2d.drawImage(rawImage, (btnWidth - scaledWidth) / 2, (btnHeight - scaledHeight) / 2, scaledWidth, scaledHeight, this);
+                int imgWidth = rawImage.getWidth(null);
+                int imgHeight = rawImage.getHeight(null);
+                
+                double scale = Math.min((double)maxWidth / imgWidth, (double)maxHeight / imgHeight); 
+                int scaledWidth = (int)(imgWidth * scale);
+                int scaledHeight = (int)(imgHeight * scale);
+
+                // Căn giữa hình ảnh vào tâm viên đá
+                g2d.drawImage(rawImage, (w - scaledWidth - 8) / 2, (h - scaledHeight - 8) / 2, scaledWidth, scaledHeight, this);
+            } else {
+                // Nếu lỗi không load được ảnh thì hiện chữ chữa cháy
+                String textFallback = currentStone.faceUp ? currentStone.type : "?";
+                g2d.setColor(currentStone.faceUp ? Color.BLACK : Color.WHITE);
+                g2d.setFont(new Font("Segoe UI", Font.BOLD, 14));
+                FontMetrics fm = g2d.getFontMetrics();
+                g2d.drawString(textFallback, (w - fm.stringWidth(textFallback) - 8) / 2, (h + fm.getAscent() - 8) / 2 - 4);
+            }
         }
     }
 
